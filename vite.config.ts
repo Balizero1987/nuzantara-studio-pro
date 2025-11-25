@@ -22,4 +22,13 @@ export default defineConfig({
       '@': resolve(projectRoot, 'src')
     }
   },
+  base: '/nuzantara-studio-pro/',
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: true,
+  },
+  server: {
+    port: 5000,
+  }
 });
