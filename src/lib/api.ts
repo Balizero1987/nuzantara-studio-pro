@@ -1,4 +1,4 @@
-import type { OpenRouterConfig, AIConfig, AIProviderType, StreamingCallbacks } from './types';
+import type { OpenRouterConfig, AIConfig, AIProviderType, StreamingCallbacks, AIProvider } from './types';
 import { getProviderById } from './constants';
 
 export async function callAI(
@@ -6,7 +6,11 @@ export async function callAI(
   messages: Array<{ role: string; content: string }>,
   callbacks?: StreamingCallbacks
 ): Promise<string> {
-  const provider = getProviderById(config.provider);
+  let provider = getProviderById(config.provider);
+  
+  if (!provider && config.customProviders) {
+    provider = config.customProviders.find(p => p.id === config.provider);
+  }
   
   if (!provider) {
     throw new Error(`Unknown provider: ${config.provider}`);
@@ -32,6 +36,12 @@ export async function callAI(
     
     case 'groq':
       return callGroq(config, messages, callbacks);
+    
+    case 'google':
+      return callGoogle(config, messages, callbacks);
+    
+    case 'custom':
+      return callCustomProvider(provider, config, messages, callbacks);
     
     default:
       return callOpenRouterCompatible(provider.baseUrl, config, messages, callbacks);
@@ -175,6 +185,89 @@ async function callGroq(
   }
 }
 
+async function callGoogle(
+  config: AIConfig,
+  messages: Array<{ role: string; content: string }>,
+  callbacks?: StreamingCallbacks
+): Promise<string> {
+  const provider = getProviderById(config.provider);
+  if (!provider) throw new Error('Provider not found');
+
+  const contents = messages.map(msg => ({
+    role: msg.role === 'assistant' ? 'model' : 'user',
+    parts: [{ text: msg.content }]
+  }));
+
+  const stream = !!callbacks?.onChunk;
+  const endpoint = stream 
+    ? `${provider.baseUrl}/models/${config.model}:streamGenerateContent`
+    : `${provider.baseUrl}/models/${config.model}:generateContent`;
+
+  const response = await fetch(`${endpoint}?key=${config.apiKey}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents,
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 4096,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || 'Google AI API request failed');
+  }
+
+  if (callbacks?.onChunk) {
+    return streamGoogle(response, callbacks.onChunk);
+  } else {
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+}
+
+async function callCustomProvider(
+  provider: AIProvider,
+  config: AIConfig,
+  messages: Array<{ role: string; content: string }>,
+  callbacks?: StreamingCallbacks
+): Promise<string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...provider.headers,
+  };
+
+  if (config.apiKey) {
+    headers['Authorization'] = `Bearer ${config.apiKey}`;
+  }
+
+  const response = await fetch(`${provider.baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      model: config.model,
+      messages,
+      stream: !!callbacks?.onChunk,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error?.message || `${provider.name} API request failed`);
+  }
+
+  if (callbacks?.onChunk) {
+    return streamOpenAICompatible(response, callbacks.onChunk);
+  } else {
+    const data = await response.json();
+    return data.choices[0]?.message?.content || '';
+  }
+}
+
 async function callOpenRouterCompatible(
   baseUrl: string,
   config: AIConfig,
@@ -271,6 +364,36 @@ async function streamAnthropic(response: Response, onChunk: (chunk: string) => v
           }
         } catch (e) {
         }
+      }
+    }
+  }
+
+  return fullContent;
+}
+
+async function streamGoogle(response: Response, onChunk: (chunk: string) => void): Promise<string> {
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+  let fullContent = '';
+
+  if (!reader) throw new Error('Response body is not readable');
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const lines = chunk.split('\n').filter((line) => line.trim() !== '');
+
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line);
+        const content = parsed.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (content) {
+          fullContent += content;
+          onChunk(content);
+        }
+      } catch (e) {
       }
     }
   }

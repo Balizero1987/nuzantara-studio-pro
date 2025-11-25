@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChatCircle, Code, Terminal, FolderOpen, Robot, Gear } from '@phosphor-icons/react';
+import { ChatCircle, Code, Terminal, FolderOpen, Robot, Gear, PuzzlePiece } from '@phosphor-icons/react';
 import { AI_PROVIDERS, getAllModels } from '@/lib/constants';
-import type { PanelType } from '@/lib/types';
+import type { PanelType, AIProvider } from '@/lib/types';
 
 interface SidebarProps {
   currentPanel: PanelType;
@@ -12,6 +12,8 @@ interface SidebarProps {
   onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
   onSettingsClick: () => void;
+  onExtensionsClick?: () => void;
+  customProviders?: AIProvider[];
 }
 
 export function Sidebar({
@@ -22,6 +24,8 @@ export function Sidebar({
   onProviderChange,
   onModelChange,
   onSettingsClick,
+  onExtensionsClick,
+  customProviders = [],
 }: SidebarProps) {
   const navItems = [
     { id: 'chat' as const, icon: ChatCircle, label: 'Chat' },
@@ -31,7 +35,8 @@ export function Sidebar({
     { id: 'agents' as const, icon: Robot, label: 'Agents' },
   ];
 
-  const currentProvider = AI_PROVIDERS.find(p => p.id === selectedProvider);
+  const allProviders = [...AI_PROVIDERS, ...customProviders];
+  const currentProvider = allProviders.find(p => p.id === selectedProvider);
   const availableModels = currentProvider?.models || [];
 
   return (
@@ -49,14 +54,30 @@ export function Sidebar({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {AI_PROVIDERS.map((provider) => (
-                <SelectItem key={provider.id} value={provider.id}>
-                  <span className="flex items-center gap-2">
-                    <span>{provider.icon}</span>
-                    <span>{provider.name}</span>
-                  </span>
-                </SelectItem>
-              ))}
+              <SelectGroup>
+                <SelectLabel>Built-in Providers</SelectLabel>
+                {AI_PROVIDERS.map((provider) => (
+                  <SelectItem key={provider.id} value={provider.id}>
+                    <span className="flex items-center gap-2">
+                      <span>{provider.icon}</span>
+                      <span>{provider.name}</span>
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+              {customProviders.length > 0 && (
+                <SelectGroup>
+                  <SelectLabel>Custom Providers</SelectLabel>
+                  {customProviders.map((provider) => (
+                    <SelectItem key={provider.id} value={provider.id}>
+                      <span className="flex items-center gap-2">
+                        <span>{provider.icon}</span>
+                        <span>{provider.name}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -98,7 +119,13 @@ export function Sidebar({
         })}
       </nav>
 
-      <div className="p-3 border-t border-border">
+      <div className="p-3 border-t border-border space-y-1">
+        {onExtensionsClick && (
+          <Button variant="outline" className="w-full justify-start gap-3" onClick={onExtensionsClick}>
+            <PuzzlePiece size={20} />
+            <span>Extensions</span>
+          </Button>
+        )}
         <Button variant="outline" className="w-full justify-start gap-3" onClick={onSettingsClick}>
           <Gear size={20} />
           <span>Settings</span>

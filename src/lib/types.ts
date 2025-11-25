@@ -33,7 +33,7 @@ export interface OpenRouterConfig {
   baseUrl: string;
 }
 
-export type AIProviderType = 'openrouter' | 'openai' | 'anthropic' | 'groq' | 'custom';
+export type AIProviderType = 'openrouter' | 'openai' | 'anthropic' | 'groq' | 'google' | 'custom';
 
 export interface AIProvider {
   id: string;
@@ -43,6 +43,8 @@ export interface AIProvider {
   requiresApiKey: boolean;
   icon?: string;
   models: AIModel[];
+  isCustom?: boolean;
+  headers?: Record<string, string>;
 }
 
 export interface AIModel {
@@ -56,6 +58,7 @@ export interface AIConfig {
   provider: string;
   model: string;
   apiKey: string;
+  customProviders?: AIProvider[];
 }
 
 export interface StreamingCallbacks {

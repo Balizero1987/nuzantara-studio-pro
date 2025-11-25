@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Toaster, toast } from 'sonner';
 import { Sidebar } from '@/components/Sidebar';
@@ -8,27 +8,38 @@ import { TerminalPanel } from '@/components/TerminalPanel';
 import { FilesPanel } from '@/components/FilesPanel';
 import { AgentsPanel } from '@/components/AgentsPanel';
 import { SettingsDialog } from '@/components/SettingsDialog';
+import { ExtensionsDialog, type Extension } from '@/components/ExtensionsDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { callAI } from '@/lib/api';
 import { AI_PROVIDERS, DEFAULT_FILE_SYSTEM, AGENT_PROMPTS } from '@/lib/constants';
-import type { PanelType, ChatMessage, TerminalEntry, FileSystem, AgentType } from '@/lib/types';
+import type { PanelType, ChatMessage, TerminalEntry, FileSystem, AgentType, AIProvider } from '@/lib/types';
 
 function App() {
   const [currentPanel, setCurrentPanel] = useState<PanelType>('chat');
   const [selectedProvider, setSelectedProvider] = useKV('selected-provider', AI_PROVIDERS[0].id);
   const [selectedModel, setSelectedModel] = useKV('selected-model', AI_PROVIDERS[0].models[0].value);
   const [apiKeys, setApiKeys] = useKV<Record<string, string>>('ai-api-keys', {});
+  const [customProviders, setCustomProviders] = useKV<AIProvider[]>('custom-providers', []);
+  const [extensions, setExtensions] = useKV<Extension[]>('extensions', []);
   const [chatMessages, setChatMessages] = useKV<ChatMessage[]>('chat-messages', []);
   const [terminalEntries, setTerminalEntries] = useKV<TerminalEntry[]>('terminal-entries', []);
   const [fileSystem, setFileSystem] = useKV<FileSystem>('file-system', DEFAULT_FILE_SYSTEM);
   const [currentFile, setCurrentFile] = useKV('current-file', 'index.js');
   const [isStreaming, setIsStreaming] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showExtensions, setShowExtensions] = useState(false);
   const [agentOutput, setAgentOutput] = useState('');
   const [isAgentRunning, setIsAgentRunning] = useState(false);
 
-  const currentProvider = AI_PROVIDERS.find(p => p.id === selectedProvider) || AI_PROVIDERS[0];
+  const allProviders = useMemo(() => {
+    return [...AI_PROVIDERS, ...(customProviders || [])];
+  }, [customProviders]);
+
+  const currentProvider = useMemo(() => {
+    return allProviders.find(p => p.id === selectedProvider) || AI_PROVIDERS[0];
+  }, [allProviders, selectedProvider]);
+
   const currentApiKey = apiKeys?.[currentProvider.id] || '';
 
   useEffect(() => {
@@ -39,7 +50,7 @@ function App() {
 
   const handleProviderChange = (providerId: string) => {
     setSelectedProvider(providerId);
-    const provider = AI_PROVIDERS.find(p => p.id === providerId);
+    const provider = allProviders.find(p => p.id === providerId);
     if (provider && provider.models.length > 0) {
       setSelectedModel(provider.models[0].value);
     }
@@ -78,6 +89,7 @@ function App() {
           provider: currentProvider.id,
           model: selectedModel || currentProvider.models[0].value,
           apiKey: currentApiKey,
+          customProviders: customProviders || [],
         },
         [{ role: 'user', content }],
         {
@@ -186,6 +198,7 @@ function App() {
           provider: currentProvider.id,
           model: selectedModel || currentProvider.models[0].value,
           apiKey: currentApiKey,
+          customProviders: customProviders || [],
         },
         [{ role: 'user', content: prompt }]
       );
@@ -216,6 +229,8 @@ function App() {
         onProviderChange={handleProviderChange}
         onModelChange={setSelectedModel}
         onSettingsClick={() => setShowSettings(true)}
+        onExtensionsClick={() => setShowExtensions(true)}
+        customProviders={customProviders || []}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -278,6 +293,15 @@ function App() {
         onOpenChange={setShowSettings}
         apiKeys={apiKeys || {}}
         onApiKeysChange={setApiKeys}
+        customProviders={customProviders || []}
+        onCustomProvidersChange={setCustomProviders}
+      />
+
+      <ExtensionsDialog
+        open={showExtensions}
+        onOpenChange={setShowExtensions}
+        extensions={extensions || []}
+        onExtensionsChange={setExtensions}
       />
     </div>
   );

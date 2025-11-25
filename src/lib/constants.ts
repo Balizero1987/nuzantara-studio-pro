@@ -62,6 +62,20 @@ export const AI_PROVIDERS: AIProvider[] = [
       { value: 'gemma2-9b-it', label: 'Gemma 2 9B', provider: 'groq', description: 'Google\'s open model' },
     ],
   },
+  {
+    id: 'google',
+    name: 'Google AI',
+    type: 'google',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    requiresApiKey: true,
+    icon: '🔮',
+    models: [
+      { value: 'gemini-2.0-flash-exp', label: 'Gemini 2.0 Flash', provider: 'google', description: 'Experimental multimodal' },
+      { value: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', provider: 'google', description: 'Most capable' },
+      { value: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'google', description: 'Fast and efficient' },
+      { value: 'gemini-1.0-pro', label: 'Gemini 1.0 Pro', provider: 'google', description: 'Legacy model' },
+    ],
+  },
 ];
 
 export const getAllModels = (): AIModel[] => {

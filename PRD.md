@@ -1,23 +1,38 @@
 # Planning Guide
 
-A fully client-side web-based IDE inspired by Cursor, Claude Code, and Replit that runs entirely in the browser with multi-model AI support via OpenRouter API.
+A fully client-side web-based IDE inspired by Cursor, Claude Code, and Replit that runs entirely in the browser with multi-model AI support, custom provider integration, and extensibility.
 
 **Experience Qualities**:
 1. **Professional** - A production-grade development environment that feels as capable as desktop IDEs
 2. **Intelligent** - AI agents seamlessly integrated into the workflow for code analysis, refactoring, and generation
-3. **Fluid** - Smooth transitions between chat, coding, terminal, and file management with no friction
+3. **Extensible** - Plugin architecture and custom AI provider support for unlimited customization
+4. **Fluid** - Smooth transitions between chat, coding, terminal, and file management with no friction
 
 **Complexity Level**: Complex Application (advanced functionality, accounts)
-  - Multiple integrated panels (chat, editor, terminal, file system, agents), real-time AI streaming, virtual file system with persistence, code execution sandbox, multi-model selection
+  - Multiple integrated panels (chat, editor, terminal, file system, agents), real-time AI streaming, virtual file system with persistence, code execution sandbox, multi-model selection, custom provider support, extension system
 
 ## Essential Features
 
+### Multi-Provider AI System
+- **Functionality**: Support for multiple AI providers including OpenRouter, OpenAI, Anthropic, Groq, Google Gemini, and custom OpenAI-compatible providers. Users can add their own API keys and custom providers with full streaming support.
+- **Purpose**: Enables developers to use their existing AI subscriptions (ChatGPT Plus, Gemini Ultra, etc.) and custom/self-hosted models
+- **Trigger**: User opens settings and adds API keys or custom providers
+- **Progression**: Open settings → Select provider tab → Add API key → Save → Select provider in sidebar → Choose model → Start chatting
+- **Success criteria**: All providers work with streaming, custom providers integrate seamlessly, API keys persist securely
+
+### Extension System
+- **Functionality**: Plugin architecture allowing installation of extensions for tools, themes, languages, and integrations
+- **Purpose**: Extend IDE functionality without modifying core code
+- **Trigger**: User opens extensions dialog from sidebar
+- **Progression**: Click Extensions → Browse available extensions → Install → Enable/disable → Configure settings
+- **Success criteria**: Extensions install instantly, can be toggled on/off, settings persist
+
 ### Multi-Model Chat Interface
-- **Functionality**: Chat with various AI models (GPT-4, Claude, DeepSeek, Llama, etc.) via OpenRouter API with streaming responses
+- **Functionality**: Chat with various AI models (GPT-4, Claude, Gemini, DeepSeek, Llama, etc.) via multiple providers with streaming responses
 - **Purpose**: Enables developers to get coding help, explanations, and generate code using their preferred AI model
-- **Trigger**: User selects model from dropdown and types message
-- **Progression**: Select model → Type message → Send → Stream response with markdown rendering → Auto-scroll to latest message → Continue conversation
-- **Success criteria**: Messages stream smoothly, markdown renders correctly (code blocks, lists, formatting), model switching works instantly
+- **Trigger**: User selects provider and model from dropdowns and types message
+- **Progression**: Select provider → Select model → Type message → Send → Stream response with markdown rendering → Auto-scroll to latest message → Continue conversation
+- **Success criteria**: Messages stream smoothly, markdown renders correctly (code blocks, lists, formatting), provider switching works instantly
 
 ### Monaco Code Editor
 - **Functionality**: VS Code's editor engine with syntax highlighting, IntelliSense, and multi-language support
