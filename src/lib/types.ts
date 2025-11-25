@@ -32,3 +32,34 @@ export interface OpenRouterConfig {
   model: string;
   baseUrl: string;
 }
+
+export type AIProviderType = 'openrouter' | 'openai' | 'anthropic' | 'groq' | 'custom';
+
+export interface AIProvider {
+  id: string;
+  name: string;
+  type: AIProviderType;
+  baseUrl: string;
+  requiresApiKey: boolean;
+  icon?: string;
+  models: AIModel[];
+}
+
+export interface AIModel {
+  value: string;
+  label: string;
+  provider: string;
+  description?: string;
+}
+
+export interface AIConfig {
+  provider: string;
+  model: string;
+  apiKey: string;
+}
+
+export interface StreamingCallbacks {
+  onChunk?: (chunk: string) => void;
+  onComplete?: () => void;
+  onError?: (error: Error) => void;
+}

@@ -7,12 +7,12 @@ A fully client-side web-based IDE with AI-powered development tools. Inspired by
 
 ## ✨ Features
 
-### 🤖 Multi-Model AI Chat
-- Support for multiple AI models via OpenRouter API
-- GPT-4, Claude, DeepSeek, Llama, Qwen, and more
-- Streaming responses with real-time markdown rendering
-- Code syntax highlighting in chat messages
-- Conversation history persists across sessions
+### 🤖 Multi-Provider AI Support
+- **Multiple AI Providers**: OpenRouter, OpenAI, Anthropic, Groq, and easily add custom providers
+- **20+ AI Models**: GPT-4, Claude, DeepSeek, Llama, Gemini, Qwen, and more
+- **Easy Provider Management**: Switch between providers seamlessly
+- **Streaming Responses**: Real-time markdown rendering
+- **Extensible Architecture**: Add new providers in minutes (see [AI_PROVIDERS.md](./AI_PROVIDERS.md))
 
 ### 📝 Monaco Code Editor
 - Full VS Code editor engine
@@ -49,11 +49,23 @@ A fully client-side web-based IDE with AI-powered development tools. Inspired by
 
 ### Prerequisites
 
-1. **OpenRouter API Key** (required for AI features)
+Choose one or more AI providers and get an API key:
+
+1. **OpenRouter** (recommended - access to all models with one key)
    - Go to [openrouter.ai](https://openrouter.ai)
-   - Sign up or log in
-   - Navigate to Keys section
-   - Create a new API key
+   - Sign up and create an API key
+
+2. **OpenAI**
+   - Go to [platform.openai.com](https://platform.openai.com/api-keys)
+   - Create an API key
+
+3. **Anthropic**
+   - Go to [console.anthropic.com](https://console.anthropic.com/settings/keys)
+   - Create an API key
+
+4. **Groq** (free tier available!)
+   - Go to [console.groq.com](https://console.groq.com/keys)
+   - Create an API key
 
 ### Installation
 
@@ -73,10 +85,64 @@ npm run dev
 
 1. Launch the application
 2. Click the Settings button in the sidebar
-3. Enter your OpenRouter API key
-4. Start coding!
+3. Choose your AI provider tab
+4. Enter your API key for that provider
+5. Start coding!
 
-Your API key is stored locally in your browser and never sent anywhere except OpenRouter.
+Your API keys are stored locally in your browser and only sent to their respective providers.
+
+## 🎯 Supported AI Providers
+
+### 🔀 OpenRouter
+Access to 20+ models from multiple providers with a single API key:
+- GPT-4o, GPT-4o Mini
+- Claude 3.5 Sonnet, Claude 3 Haiku
+- DeepSeek Chat
+- Gemini Pro
+- Llama 3.1 (405B, 70B)
+- Qwen 2.5 72B
+
+### 🤖 OpenAI
+Direct access to OpenAI models:
+- GPT-4o, GPT-4o Mini
+- GPT-4 Turbo
+- GPT-3.5 Turbo
+
+### 🧠 Anthropic
+Claude models directly from Anthropic:
+- Claude 3.5 Sonnet
+- Claude 3 Opus
+- Claude 3 Sonnet
+- Claude 3 Haiku
+
+### ⚡ Groq
+Ultra-fast inference:
+- Llama 3.1 70B
+- Llama 3.1 8B
+- Mixtral 8x7B
+- Gemma 2 9B
+
+## ➕ Adding Custom Providers
+
+Want to add more providers? It's easy! See our [AI Providers Guide](./AI_PROVIDERS.md) for detailed instructions.
+
+Quick example:
+```typescript
+// Add to src/lib/constants.ts
+{
+  id: 'ollama',
+  name: 'Ollama (Local)',
+  type: 'custom',
+  baseUrl: 'http://localhost:11434/v1',
+  requiresApiKey: false,
+  icon: '🦙',
+  models: [
+    { value: 'llama3.1', label: 'Llama 3.1', provider: 'ollama' }
+  ]
+}
+```
+
+Supports any OpenAI-compatible API!
 
 ## 📦 Deployment
 
@@ -113,8 +179,12 @@ Simply upload the contents of the `dist` folder to any static hosting service.
 
 ## 🎯 Usage
 
+### Provider Selection
+- Choose your AI provider from the dropdown in the sidebar
+- Select a model from that provider
+- Each provider's API key is configured separately in Settings
+
 ### Chat Panel
-- Select your preferred AI model from the sidebar
 - Type your question or request
 - Get streaming responses with markdown formatting
 - Chat history is automatically saved
@@ -145,24 +215,15 @@ Simply upload the contents of the `dist` folder to any static hosting service.
 - **UI Components**: Shadcn UI v4
 - **Icons**: Phosphor Icons
 - **Markdown**: React Markdown with syntax highlighting
-- **AI**: OpenRouter API
+- **AI**: Multi-provider support (OpenRouter, OpenAI, Anthropic, Groq)
 - **Storage**: Browser localStorage via Spark KV
 - **Build**: Vite 6
-
-## 📝 Available AI Models
-
-- OpenAI GPT-4o & GPT-4o Mini
-- Anthropic Claude 3.5 Sonnet & Claude 3 Haiku
-- DeepSeek Chat
-- Google Gemini Pro
-- Meta Llama 3.1 (405B & 70B)
-- Qwen 2.5 72B
 
 ## 🔐 Privacy & Security
 
 - **100% Client-Side**: No backend server, all processing in your browser
 - **Local Storage**: Files and settings stored in your browser only
-- **API Key Security**: Your OpenRouter key never leaves your browser except for API calls
+- **API Key Security**: Your API keys never leave your browser except for direct API calls to their providers
 - **No Tracking**: No analytics, no data collection
 - **Open Source**: Review the code yourself
 
@@ -186,19 +247,21 @@ MIT License - feel free to use this project for any purpose.
 - Terminal only supports JavaScript eval (no shell commands)
 - File system limited by browser localStorage size (~5-10MB)
 - No file folders/directories (flat structure only)
-- Streaming responses require OpenRouter streaming support
+- Streaming responses depend on provider support
 
 ## 📞 Support
 
 If you encounter issues:
-1. Check that your OpenRouter API key is valid
-2. Ensure you have credits on your OpenRouter account
+1. Check that your API key is valid for the selected provider
+2. Ensure you have credits on your provider account
 3. Try clearing browser cache and localStorage
 4. Check browser console for error messages
 
 ## 🔮 Roadmap
 
 Future enhancements planned:
+- [ ] More built-in providers (Cohere, Together AI, etc.)
+- [ ] Custom provider configuration UI
 - [ ] Folder/directory support
 - [ ] File import/export
 - [ ] Multiple terminal tabs
@@ -212,4 +275,4 @@ Future enhancements planned:
 
 **Built with ❤️ using Spark**
 
-Start coding smarter with AI-powered development tools!
+Start coding smarter with AI-powered development tools from multiple providers!

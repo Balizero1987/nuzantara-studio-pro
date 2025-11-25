@@ -10,14 +10,15 @@ import { AgentsPanel } from '@/components/AgentsPanel';
 import { SettingsDialog } from '@/components/SettingsDialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { callOpenRouter } from '@/lib/api';
-import { AI_MODELS, DEFAULT_FILE_SYSTEM, OPENROUTER_BASE_URL, AGENT_PROMPTS } from '@/lib/constants';
+import { callAI } from '@/lib/api';
+import { AI_PROVIDERS, DEFAULT_FILE_SYSTEM, AGENT_PROMPTS } from '@/lib/constants';
 import type { PanelType, ChatMessage, TerminalEntry, FileSystem, AgentType } from '@/lib/types';
 
 function App() {
   const [currentPanel, setCurrentPanel] = useState<PanelType>('chat');
-  const [selectedModel, setSelectedModel] = useKV('selected-model', AI_MODELS[0].value);
-  const [apiKey, setApiKey] = useKV('openrouter-api-key', '');
+  const [selectedProvider, setSelectedProvider] = useKV('selected-provider', AI_PROVIDERS[0].id);
+  const [selectedModel, setSelectedModel] = useKV('selected-model', AI_PROVIDERS[0].models[0].value);
+  const [apiKeys, setApiKeys] = useKV<Record<string, string>>('ai-api-keys', {});
   const [chatMessages, setChatMessages] = useKV<ChatMessage[]>('chat-messages', []);
   const [terminalEntries, setTerminalEntries] = useKV<TerminalEntry[]>('terminal-entries', []);
   const [fileSystem, setFileSystem] = useKV<FileSystem>('file-system', DEFAULT_FILE_SYSTEM);
@@ -27,15 +28,26 @@ function App() {
   const [agentOutput, setAgentOutput] = useState('');
   const [isAgentRunning, setIsAgentRunning] = useState(false);
 
+  const currentProvider = AI_PROVIDERS.find(p => p.id === selectedProvider) || AI_PROVIDERS[0];
+  const currentApiKey = apiKeys?.[currentProvider.id] || '';
+
   useEffect(() => {
-    if (!apiKey) {
+    if (!currentApiKey && currentProvider.requiresApiKey) {
       setShowSettings(true);
     }
-  }, []);
+  }, [currentProvider.id]);
+
+  const handleProviderChange = (providerId: string) => {
+    setSelectedProvider(providerId);
+    const provider = AI_PROVIDERS.find(p => p.id === providerId);
+    if (provider && provider.models.length > 0) {
+      setSelectedModel(provider.models[0].value);
+    }
+  };
 
   const handleSendMessage = async (content: string) => {
-    if (!apiKey) {
-      toast.error('Please add your OpenRouter API key in settings');
+    if (!currentApiKey && currentProvider.requiresApiKey) {
+      toast.error(`Please add your ${currentProvider.name} API key in settings`);
       setShowSettings(true);
       return;
     }
@@ -61,20 +73,22 @@ function App() {
     setChatMessages((prev) => [...(prev || []), assistantMessage]);
 
     try {
-      await callOpenRouter(
+      await callAI(
         {
-          apiKey: apiKey || '',
-          model: selectedModel || AI_MODELS[0].value,
-          baseUrl: OPENROUTER_BASE_URL,
+          provider: currentProvider.id,
+          model: selectedModel || currentProvider.models[0].value,
+          apiKey: currentApiKey,
         },
         [{ role: 'user', content }],
-        (chunk) => {
-          assistantContent += chunk;
-          setChatMessages((prev) =>
-            (prev || []).map((msg) =>
-              msg.id === assistantMessage.id ? { ...msg, content: assistantContent } : msg
-            )
-          );
+        {
+          onChunk: (chunk) => {
+            assistantContent += chunk;
+            setChatMessages((prev) =>
+              (prev || []).map((msg) =>
+                msg.id === assistantMessage.id ? { ...msg, content: assistantContent } : msg
+              )
+            );
+          },
         }
       );
     } catch (error) {
@@ -147,8 +161,8 @@ function App() {
   };
 
   const handleRunAgent = async (type: AgentType) => {
-    if (!apiKey) {
-      toast.error('Please add your OpenRouter API key in settings');
+    if (!currentApiKey && currentProvider.requiresApiKey) {
+      toast.error(`Please add your ${currentProvider.name} API key in settings`);
       setShowSettings(true);
       return;
     }
@@ -167,11 +181,11 @@ function App() {
 
     try {
       const prompt = AGENT_PROMPTS[type](currentFileContent);
-      const response = await callOpenRouter(
+      const response = await callAI(
         {
-          apiKey: apiKey || '',
-          model: selectedModel || AI_MODELS[0].value,
-          baseUrl: OPENROUTER_BASE_URL,
+          provider: currentProvider.id,
+          model: selectedModel || currentProvider.models[0].value,
+          apiKey: currentApiKey,
         },
         [{ role: 'user', content: prompt }]
       );
@@ -188,6 +202,7 @@ function App() {
   const files = fileSystem || DEFAULT_FILE_SYSTEM;
   const file = currentFile || 'index.js';
   const currentFileNode = files[file];
+  const hasApiKey = !!currentApiKey || !currentProvider.requiresApiKey;
 
   return (
     <div className="h-screen flex overflow-hidden bg-background text-foreground">
@@ -196,16 +211,18 @@ function App() {
       <Sidebar
         currentPanel={currentPanel}
         onPanelChange={setCurrentPanel}
-        selectedModel={selectedModel || AI_MODELS[0].value}
+        selectedProvider={selectedProvider || AI_PROVIDERS[0].id}
+        selectedModel={selectedModel || AI_PROVIDERS[0].models[0].value}
+        onProviderChange={handleProviderChange}
         onModelChange={setSelectedModel}
         onSettingsClick={() => setShowSettings(true)}
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {!apiKey && (
+        {!hasApiKey && (
           <Alert className="m-4 border-accent">
             <AlertDescription className="flex items-center justify-between">
-              <span>Add your OpenRouter API key to start using AI features</span>
+              <span>Add your {currentProvider.name} API key to start using AI features</span>
               <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
                 Add API Key
               </Button>
@@ -259,8 +276,8 @@ function App() {
       <SettingsDialog
         open={showSettings}
         onOpenChange={setShowSettings}
-        apiKey={apiKey || ''}
-        onApiKeyChange={setApiKey}
+        apiKeys={apiKeys || {}}
+        onApiKeysChange={setApiKeys}
       />
     </div>
   );

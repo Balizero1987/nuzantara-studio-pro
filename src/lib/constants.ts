@@ -1,14 +1,81 @@
-export const AI_MODELS = [
-  { value: 'openai/gpt-4o', label: 'GPT-4o' },
-  { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini' },
-  { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet' },
-  { value: 'anthropic/claude-3-haiku', label: 'Claude 3 Haiku' },
-  { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat' },
-  { value: 'google/gemini-pro', label: 'Gemini Pro' },
-  { value: 'meta-llama/llama-3.1-405b-instruct', label: 'Llama 3.1 405B' },
-  { value: 'meta-llama/llama-3.1-70b-instruct', label: 'Llama 3.1 70B' },
-  { value: 'qwen/qwen-2.5-72b-instruct', label: 'Qwen 2.5 72B' },
+import type { AIProvider, AIModel } from './types';
+
+export const AI_PROVIDERS: AIProvider[] = [
+  {
+    id: 'openrouter',
+    name: 'OpenRouter',
+    type: 'openrouter',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    requiresApiKey: true,
+    icon: '🔀',
+    models: [
+      { value: 'openai/gpt-4o', label: 'GPT-4o', provider: 'openrouter', description: 'Most capable OpenAI model' },
+      { value: 'openai/gpt-4o-mini', label: 'GPT-4o Mini', provider: 'openrouter', description: 'Fast and affordable' },
+      { value: 'anthropic/claude-3.5-sonnet', label: 'Claude 3.5 Sonnet', provider: 'openrouter', description: 'Best for coding' },
+      { value: 'anthropic/claude-3-haiku', label: 'Claude 3 Haiku', provider: 'openrouter', description: 'Fast and efficient' },
+      { value: 'deepseek/deepseek-chat', label: 'DeepSeek Chat', provider: 'openrouter', description: 'Strong reasoning' },
+      { value: 'google/gemini-pro', label: 'Gemini Pro', provider: 'openrouter', description: 'Google\'s flagship model' },
+      { value: 'meta-llama/llama-3.1-405b-instruct', label: 'Llama 3.1 405B', provider: 'openrouter', description: 'Most capable open model' },
+      { value: 'meta-llama/llama-3.1-70b-instruct', label: 'Llama 3.1 70B', provider: 'openrouter', description: 'Balanced performance' },
+      { value: 'qwen/qwen-2.5-72b-instruct', label: 'Qwen 2.5 72B', provider: 'openrouter', description: 'Excellent multilingual' },
+    ],
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    type: 'openai',
+    baseUrl: 'https://api.openai.com/v1',
+    requiresApiKey: true,
+    icon: '🤖',
+    models: [
+      { value: 'gpt-4o', label: 'GPT-4o', provider: 'openai', description: 'Most capable model' },
+      { value: 'gpt-4o-mini', label: 'GPT-4o Mini', provider: 'openai', description: 'Fast and affordable' },
+      { value: 'gpt-4-turbo', label: 'GPT-4 Turbo', provider: 'openai', description: 'Previous generation' },
+      { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', provider: 'openai', description: 'Fast and economical' },
+    ],
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic',
+    type: 'anthropic',
+    baseUrl: 'https://api.anthropic.com/v1',
+    requiresApiKey: true,
+    icon: '🧠',
+    models: [
+      { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet', provider: 'anthropic', description: 'Best for coding' },
+      { value: 'claude-3-opus-20240229', label: 'Claude 3 Opus', provider: 'anthropic', description: 'Most capable' },
+      { value: 'claude-3-sonnet-20240229', label: 'Claude 3 Sonnet', provider: 'anthropic', description: 'Balanced' },
+      { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku', provider: 'anthropic', description: 'Fast and efficient' },
+    ],
+  },
+  {
+    id: 'groq',
+    name: 'Groq',
+    type: 'groq',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    requiresApiKey: true,
+    icon: '⚡',
+    models: [
+      { value: 'llama-3.1-70b-versatile', label: 'Llama 3.1 70B', provider: 'groq', description: 'Fast inference' },
+      { value: 'llama-3.1-8b-instant', label: 'Llama 3.1 8B', provider: 'groq', description: 'Ultra-fast' },
+      { value: 'mixtral-8x7b-32768', label: 'Mixtral 8x7B', provider: 'groq', description: 'Large context' },
+      { value: 'gemma2-9b-it', label: 'Gemma 2 9B', provider: 'groq', description: 'Google\'s open model' },
+    ],
+  },
 ];
+
+export const getAllModels = (): AIModel[] => {
+  return AI_PROVIDERS.flatMap(provider => provider.models);
+};
+
+export const getProviderById = (id: string): AIProvider | undefined => {
+  return AI_PROVIDERS.find(provider => provider.id === id);
+};
+
+export const getModelsByProvider = (providerId: string): AIModel[] => {
+  const provider = getProviderById(providerId);
+  return provider?.models || [];
+};
 
 export const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 

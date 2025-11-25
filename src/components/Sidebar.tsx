@@ -1,13 +1,15 @@
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChatCircle, Code, Terminal, FolderOpen, Robot, Gear } from '@phosphor-icons/react';
-import { AI_MODELS } from '@/lib/constants';
+import { AI_PROVIDERS, getAllModels } from '@/lib/constants';
 import type { PanelType } from '@/lib/types';
 
 interface SidebarProps {
   currentPanel: PanelType;
   onPanelChange: (panel: PanelType) => void;
+  selectedProvider: string;
   selectedModel: string;
+  onProviderChange: (provider: string) => void;
   onModelChange: (model: string) => void;
   onSettingsClick: () => void;
 }
@@ -15,7 +17,9 @@ interface SidebarProps {
 export function Sidebar({
   currentPanel,
   onPanelChange,
+  selectedProvider,
   selectedModel,
+  onProviderChange,
   onModelChange,
   onSettingsClick,
 }: SidebarProps) {
@@ -27,6 +31,9 @@ export function Sidebar({
     { id: 'agents' as const, icon: Robot, label: 'Agents' },
   ];
 
+  const currentProvider = AI_PROVIDERS.find(p => p.id === selectedProvider);
+  const availableModels = currentProvider?.models || [];
+
   return (
     <div className="w-60 bg-card border-r border-border flex flex-col">
       <div className="p-4 border-b border-border">
@@ -34,20 +41,41 @@ export function Sidebar({
         <p className="text-xs text-muted-foreground">PRO Edition</p>
       </div>
 
-      <div className="p-4 border-b border-border">
-        <label className="text-sm font-medium text-foreground block mb-2">AI Model</label>
-        <Select value={selectedModel} onValueChange={onModelChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {AI_MODELS.map((model) => (
-              <SelectItem key={model.value} value={model.value}>
-                {model.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="p-4 border-b border-border space-y-3">
+        <div>
+          <label className="text-sm font-medium text-foreground block mb-2">AI Provider</label>
+          <Select value={selectedProvider} onValueChange={onProviderChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {AI_PROVIDERS.map((provider) => (
+                <SelectItem key={provider.id} value={provider.id}>
+                  <span className="flex items-center gap-2">
+                    <span>{provider.icon}</span>
+                    <span>{provider.name}</span>
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground block mb-2">Model</label>
+          <Select value={selectedModel} onValueChange={onModelChange}>
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {availableModels.map((model) => (
+                <SelectItem key={model.value} value={model.value}>
+                  {model.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <nav className="flex-1 p-3 space-y-1">
